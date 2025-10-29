@@ -11,11 +11,7 @@ const router = express.Router();
 router.post('/register', [
   body('name').notEmpty().withMessage('Name is required'),
   body('email').isEmail().withMessage('Valid email is required'),
-  body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
-  body('educationalInstitution').notEmpty().withMessage('Educational institution is required'),
-  body('class').notEmpty().withMessage('Class is required'),
-  body('address').notEmpty().withMessage('Address is required'),
-  body('phoneNumber').notEmpty().withMessage('Phone number is required')
+  body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters')
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -23,7 +19,7 @@ router.post('/register', [
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { name, email, password, educationalInstitution, class: userClass, address, phoneNumber } = req.body;
+    const { name, email, password } = req.body;
 
     // Check if user already exists
     let user = await User.findOne({ email });
@@ -35,15 +31,13 @@ router.post('/register', [
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // Create user
+    // Create user with only required fields - other fields will use defaults from schema
     user = new User({
       name,
       email,
-      password: hashedPassword,
-      educationalInstitution,
-      class: userClass,
-      address,
-      phoneNumber
+      password: hashedPassword
+      // Other fields (educationalInstitution, class, address, phoneNumber, mobileNumber, institutionName, category)
+      // will automatically get their default values from the schema
     });
 
     await user.save();
@@ -61,7 +55,13 @@ router.post('/register', [
         id: user._id,
         name: user.name,
         email: user.email,
-        title: user.title
+        educationalInstitution: user.educationalInstitution,
+        class: user.class,
+        address: user.address,
+        phoneNumber: user.phoneNumber,
+        mobileNumber: user.mobileNumber,
+        institutionName: user.institutionName,
+        category: user.category
       }
     });
   } catch (error) {
@@ -108,7 +108,13 @@ router.post('/login', [
         id: user._id,
         name: user.name,
         email: user.email,
-        title: user.title
+        educationalInstitution: user.educationalInstitution,
+        class: user.class,
+        address: user.address,
+        phoneNumber: user.phoneNumber,
+        mobileNumber: user.mobileNumber,
+        institutionName: user.institutionName,
+        category: user.category
       }
     });
   } catch (error) {
@@ -127,6 +133,58 @@ router.get('/profile', auth, async (req, res) => {
     }
 
     res.json(user);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Update user profile
+router.put('/profile', auth, [
+  body('name').notEmpty().withMessage('Name is required'),
+  body('mobileNumber').notEmpty().withMessage('Mobile number is required'),
+  body('class').notEmpty().withMessage('Class is required'),
+  body('institutionName').notEmpty().withMessage('Institution name is required'),
+  body('address').notEmpty().withMessage('Address is required'),
+  body('category').isIn(['hami', 'rafeeqa', 'umeedwar rukn', 'rukn']).withMessage('Invalid category')
+], async (req, res) => {
+  try { 
+    console.log("hey i am here");
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const { name, mobileNumber, class: userClass, institutionName, address, category } = req.body;
+
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Update user fields
+    user.name = name;
+    user.phoneNumber = mobileNumber;
+    user.class = userClass;
+    user.educationalInstitution = institutionName;
+    user.address = address;
+    user.category = category;
+
+    await user.save();
+
+    res.json({
+      message: 'Profile updated successfully',
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        mobileNumber: user.mobileNumber,
+        class: user.class,
+        institutionName: user.institutionName,
+        address: user.address,
+        category: user.category
+      }
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Server error' });

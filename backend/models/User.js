@@ -6,30 +6,32 @@ const userSchema = new mongoose.Schema({
     required: true,
     trim: true
   },
-  title: {
-    type: String,
-    default: 'member',
-    enum: ['member', 'supervisor']
-  },
+ 
   educationalInstitution: {
     type: String,
-    required: true,
-    trim: true
+    trim: true,
+    default: ''
   },
   class: {
     type: String,
-    required: true,
-    trim: true
+    trim: true,
+    default: ''
   },
   address: {
     type: String,
-    required: true,
-    trim: true
+    trim: true,
+    default: ''
   },
   phoneNumber: {
     type: String,
-    required: true,
-    trim: true
+    trim: true,
+    default: ''
+  },
+  category: {
+    type: String,
+    enum: ['hami', 'rafeeqa', 'umeedwar rukn', 'rukn'],
+    trim: true,
+    default: 'hami'
   },
   email: {
     type: String,
