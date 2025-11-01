@@ -681,30 +681,67 @@ router.get('/pdf/:month/:year', auth, async (req, res) => {
   }
 });
 
+// Helper function to build day object based on category
+const buildDayObject = (category, reqBody) => {
+  const baseDayObject = {
+    date: parseInt(reqBody.date),
+    month: reqBody.month,
+    year: reqBody.year,
+    namaz: reqBody.namaz || 'no',
+    hifz: reqBody.hifz || 'no',
+    nazra: reqBody.nazra || 'no',
+    tafseer: reqBody.tafseer || 'no',
+    hadees: reqBody.hadees || 'no',
+    literature: reqBody.literature || 'no',
+    ghrKaKaam: reqBody.ghrKaKaam || 'no',
+    karkunaanMulakaat: parseInt(reqBody.karkunaanMulakaat) || 0
+  };
+
+  const categoryLower = (category || '').toLowerCase();
+
+  switch (categoryLower) {
+    case 'hami':
+      // Hami category: base fields + ajKisiKoKoiAchiBaatBtai, quranCircle, ajApnaMuhasibaKiya, taqseemDawatiMasnuaat
+      return {
+        ...baseDayObject,
+        ajKisiKoKoiAchiBaatBtai: reqBody.ajKisiKoKoiAchiBaatBtai || 'no',
+        quranCircle: reqBody.quranCircle || 'no',
+        ajApnaMuhasibaKiya: reqBody.ajApnaMuhasibaKiya || 'no',
+        taqseemDawatiMasnuaat: parseInt(reqBody.taqseemDawatiMasnuaat) || 0
+      };
+
+    case 'rafeeqa':
+    case 'umeedwar rukn':
+    case 'rukn':
+      // Rafeeqa, Umeedwar Rukn, and Rukn categories: base fields + darsiKutab, amoomiAfraadMulakaat, khatootTadaad
+      return {
+        ...baseDayObject,
+        darsiKutab: reqBody.darsiKutab || 'no',
+        amoomiAfraadMulakaat: parseInt(reqBody.amoomiAfraadMulakaat) || 0,
+        khatootTadaad: parseInt(reqBody.khatootTadaad) || 0
+      };
+
+    default:
+      // Default to rafeeqa structure if category is unknown
+      return {
+        ...baseDayObject,
+        darsiKutab: reqBody.darsiKutab || 'no',
+        amoomiAfraadMulakaat: parseInt(reqBody.amoomiAfraadMulakaat) || 0,
+        khatootTadaad: parseInt(reqBody.khatootTadaad) || 0
+      };
+  }
+};
+
 // Add day to report
 router.post('/add-day', auth, async (req, res) => {
   try {
-    const { date, month, year, namaz, hifz, nazra, tafseer, hadees, literature, darsiKutab, karkunaanMulakaat, amoomiAfraadMulakaat, khatootTadaad, ghrKaKaam } = req.body;
+    const userCategory = req.user?.category || 'hami';
+    const { date, month, year } = req.body;
 
-    console.log('Adding day to report:', { date, month, year, namaz, hifz, nazra, tafseer, hadees, literature, darsiKutab, karkunaanMulakaat, amoomiAfraadMulakaat, khatootTadaad, ghrKaKaam });
+    console.log(`Adding day to report for user category: ${userCategory}`, { date, month, year, body: req.body });
 
-    // Create day object
-    const dayObject = {
-      date: parseInt(date),
-      month: month,
-      year: year,
-      namaz: namaz || 'no',
-      hifz: hifz || 'no',
-      nazra: nazra || 'no',
-      tafseer: tafseer || 'no',
-      hadees: hadees || 'no',
-      literature: literature || 'no',
-      darsiKutab: darsiKutab || 'no',
-      karkunaanMulakaat: parseInt(karkunaanMulakaat) || 0,
-      amoomiAfraadMulakaat: parseInt(amoomiAfraadMulakaat) || 0,
-      khatootTadaad: parseInt(khatootTadaad) || 0,
-      ghrKaKaam: ghrKaKaam || 'no'
-    };
+    // Build day object based on user category
+    const dayObject = buildDayObject(userCategory, req.body);
 
     // Find report for current user and matching month AND year
     let report = await Report.findOne({
@@ -748,7 +785,7 @@ router.post('/add-day', auth, async (req, res) => {
     }
 
     await report.save();
-    console.log(`Successfully saved day ${date} to report for ${month} ${year}`);
+    console.log(`Successfully saved day ${date} to report for ${month} ${year} (category: ${userCategory})`);
 
     res.json({
       success: true,
