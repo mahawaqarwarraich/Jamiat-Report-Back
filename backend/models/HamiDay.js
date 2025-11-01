@@ -67,9 +67,11 @@ const hamiDaySchema = new mongoose.Schema({
       default: 0,
       min: 0
     },
-    ghrKaKaam: {
-      type: String,
-      enum: ['yes', 'no'],
-      default: 'no'
-    }
-  });
+  ghrKaKaam: {
+    type: String,
+    enum: ['yes', 'no'],
+    default: 'no'
+  }
+});
+
+module.exports = hamiDaySchema;
