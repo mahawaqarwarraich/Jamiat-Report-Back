@@ -43,10 +43,18 @@ mongoose.connect(MONGODB_URI)
 // Import routes
 const userRoutes = require('./routes/users');
 const reportRoutes = require('./routes/reports');
+const hamiReportRoutes = require('./routes/hamiReports');
+const rafeeqaReportRoutes = require('./routes/rafeeqaReports');
+const ruknReportRoutes = require('./routes/ruknReports');
+const umeedwarReportRoutes = require('./routes/umeedwarReports');
 
 // Routes
 app.use('/api/users', userRoutes);
 app.use('/api/reports', reportRoutes);
+app.use('/api/hami-reports', hamiReportRoutes);
+app.use('/api/rafeeqa-reports', rafeeqaReportRoutes);
+app.use('/api/rukn-reports', ruknReportRoutes);
+app.use('/api/umeedwar-reports', umeedwarReportRoutes);
 
 // Basic route
 app.get('/', (req, res) => {
