@@ -59,16 +59,9 @@ router.get('/:month/:year', auth, async (req, res) => {
 
       await report.save();
 
-      // Add report to user's reports array (if User model has reports field)
-      try {
-        await User.findByIdAndUpdate(req.user._id, {
-          $push: { reports: report._id }
-        });
-      } catch (err) {
-        // If User model doesn't have reports field, just continue
-        console.log('Note: User model may not have reports field');
-      }
+
     } else {
+      // 
       // Migrate existing days to include month and year if missing
       let needsUpdate = false;
       report.days = report.days.map(day => {
@@ -92,6 +85,42 @@ router.get('/:month/:year', auth, async (req, res) => {
     res.json(report);
   } catch (error) {
     console.error('Error fetching Hami report:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Get specific day data for Hami report
+// This route must come before /:month/:year to avoid route conflicts
+router.get('/day/:month/:year/:date', auth, async (req, res) => {
+  try {
+    const { month, year, date } = req.params;
+    const dateNum = parseInt(date);
+
+    if (isNaN(dateNum) || dateNum < 1 || dateNum > 31) {
+      return res.status(400).json({ message: 'Invalid date. Date must be between 1 and 31' });
+    }
+
+    // Find the report for the current user with the given month and year
+    const report = await HamiReport.findOne({
+      user: req.user._id,
+      month,
+      year
+    });
+
+    if (!report) {
+      return res.json({ day: null, success: true, message: 'No report found for the specified month and year' });
+    }
+
+    // Find the specific day in the days array based on the date
+    const day = report.days.find(d => d.date === dateNum && d.month === month && d.year === year);
+
+    if (!day) {
+      return res.json({ day: null, success: true, message: 'No data found for the specified date' });
+    }
+
+    res.json({ day, success: true });
+  } catch (error) {
+    console.error('Error fetching Hami day data:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });
