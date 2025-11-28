@@ -47,31 +47,37 @@ const hamiDaySchema = new mongoose.Schema({
       enum: ['yes', 'no'],
       default: 'no'
     },
-    darsiKutab: {
+    ghrKaKaam: {
       type: String,
       enum: ['yes', 'no'],
       default: 'no'
     },
+    achiBaatBtai: {
+      type: String,
+      enum: ['yes', 'no'],
+      default: 'no'
+    },
+    quranCircle: {
+      type: String,
+      enum: ['yes', 'no'],
+      default: 'no'
+    },
+    apnaMuhasibaKiya: {
+      type: String,
+      enum: ['yes', 'no'],
+      default: 'no'
+    },
+
     karkunaanMulakaat: {
       type: Number,
       default: 0,
       min: 0
     },
-    amoomiAfraadMulakaat: {
+    taqseemDawatiMasnuaat: {
       type: Number,
       default: 0,
       min: 0
-    },
-    khatootTadaad: {
-      type: Number,
-      default: 0,
-      min: 0
-    },
-  ghrKaKaam: {
-    type: String,
-    enum: ['yes', 'no'],
-    default: 'no'
-  }
+    }
 });
 
 module.exports = hamiDaySchema;
