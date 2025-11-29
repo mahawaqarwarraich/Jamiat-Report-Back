@@ -452,7 +452,7 @@ router.get('/test-pdf', auth, async (req, res) => {
 });
 
 // Generate and download PDF
-router.get('/pdf/:month/:year', auth, async mi(req, res) => {
+router.get('/pdf/:month/:year', auth, async (req, res) => {
   try {
     const { month, year } = req.params;
     

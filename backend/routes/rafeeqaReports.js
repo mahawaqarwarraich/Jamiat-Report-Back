@@ -45,8 +45,77 @@ router.get('/day/:month/:year/:date', auth, async (req, res) => {
   }
 });
 
+// Save or update QA data for Rafeeqa report
+// This route must come before /:month/:year/:date to avoid route conflicts
+router.post('/:month/:year/qa', auth, async (req, res) => {
+  try {
+    const { month, year } = req.params;
+    const { qa } = req.body;
+
+    // Find the report for the current user with the given month and year
+    let report = await RafeeqaReport.findOne({
+      user: req.user._id,
+      month,
+      year
+    });
+
+    if (!report) {
+      // Create new Rafeeqa report
+      const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
+                         'July', 'August', 'September', 'October', 'November', 'December'];
+      const monthIndex = monthNames.indexOf(month);
+      const daysInMonth = new Date(parseInt(year), monthIndex + 1, 0).getDate();
+
+      report = new RafeeqaReport({
+        user: req.user._id,
+        month: month,
+        year: year,
+        days: []
+      });
+
+      // Loop through all days of the month and create RafeeqaDay documents
+      for (let i = 1; i <= daysInMonth; i++) {
+        const rafeeqaDay = new mongoose.Document({
+          date: i,
+          month: month,
+          year: year
+        }, RafeeqaDay);
+        report.days.push(rafeeqaDay);
+      }
+
+      await report.save();
+    }
+
+    // Update QA data
+    if (qa && typeof qa === 'object') {
+      // Initialize qa object if it doesn't exist
+      if (!report.qa) {
+        report.qa = {};
+      }
+
+      // Update each QA field
+      Object.keys(qa).forEach(key => {
+        if (qa[key] !== undefined && qa[key] !== null) {
+          report.qa[key] = qa[key];
+        }
+      });
+
+      await report.save();
+    }
+
+    res.json({ 
+      success: true, 
+      message: 'Q&A responses saved successfully!',
+      report: report
+    });
+  } catch (error) {
+    console.error('Error saving Rafeeqa QA data:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 // Save or update day data for Rafeeqa report
-// This route must come before /:month/:year to avoid route conflicts
+// This route must come after /:month/:year/qa to avoid route conflicts
 // when user clicks save button
 router.post('/:month/:year/:date', auth, async (req, res) => {
   try {
@@ -145,6 +214,51 @@ router.post('/:month/:year/:date', auth, async (req, res) => {
     });
   } catch (error) {
     console.error('Error saving Rafeeqa day data:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Get days array for Rafeeqa report (for Monthly View)
+// This route must come before /:month/:year to avoid route conflicts
+router.get('/:month/:year/days', auth, async (req, res) => {
+  try {
+    const { month, year } = req.params;
+
+    const report = await RafeeqaReport.findOne({
+      user: req.user._id,
+      month,
+      year
+    });
+
+    if (!report) {
+      return res.json({ days: [], success: true, message: 'No report found for the specified month and year' });
+    }
+
+    res.json({ days: report.days || [], success: true });
+  } catch (error) {
+    console.error('Error fetching Rafeeqa days:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Get Rafeeqa report for a specific month/year (for QA section and Monthly View)
+router.get('/:month/:year', auth, async (req, res) => {
+  try {
+    const { month, year } = req.params;
+
+    const report = await RafeeqaReport.findOne({
+      user: req.user._id,
+      month,
+      year
+    });
+
+    if (!report) {
+      return res.json({ report: null, success: true, message: 'No report found for the specified month and year' });
+    }
+
+    res.json({ report, success: true });
+  } catch (error) {
+    console.error('Error fetching Rafeeqa report:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });
