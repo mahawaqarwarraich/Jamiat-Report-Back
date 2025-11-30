@@ -295,9 +295,13 @@ router.get("/:month/:year/pdf", auth, async (req, res) => {
 
     // 5. Generate PDF
     const pdfBuffer = await page.pdf({
-      format: "A4",
+    
+    format: 'A4',
+    landscape: true,
       printBackground: true,
-      landscape: true,
+      // width: '500mm',           // very wide page
+       
+     
       margin: { top: "20px", bottom: "20px", left: "20px", right: "20px" },
     });
 
