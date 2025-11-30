@@ -1,5 +1,8 @@
 const express = require('express');
 const mongoose = require('mongoose');
+const path = require('path');
+const ejs = require('ejs');
+const puppeteer = require('puppeteer');
 const auth = require('../middleware/auth');
 const UmeedwarReport = require('../models/UmeedwarReport');
 const UmeedwarDay = require('../models/UmeedwarDay');
@@ -254,6 +257,67 @@ router.get('/:month/:year/days', auth, async (req, res) => {
   } catch (error) {
     console.error('Error fetching Umeedwar days:', error);
     res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Generate PDF from template URL using Puppeteer
+// This route must come before /:month/:year to avoid route conflicts
+router.get("/:month/:year/pdf", auth, async (req, res) => {
+  try {
+    const { month, year } = req.params;
+
+    // 1. Fetch report data from DB
+    const report = await UmeedwarReport.findOne({
+      user: req.user._id,
+      month,
+      year
+    });
+
+    // 2. Fetch user data from DB
+    const user = await User.findById(req.user._id);
+
+    // 3. Render EJS template to HTML string
+    const templatePath = path.join(__dirname, "../templates/umeedwar-report.ejs");
+    const html = await ejs.renderFile(templatePath, { 
+      month, 
+      year, 
+      reportData: report,
+      userData: user
+    });
+
+    // 4. Launch Puppeteer
+    const browser = await puppeteer.launch({
+      headless: true,
+      args: ["--no-sandbox", "--disable-setuid-sandbox"],
+    });
+    const page = await browser.newPage();
+
+    // 5. Set the HTML content
+    await page.setContent(html);
+    await page.emulateMediaType('screen');
+
+    // 6. Generate PDF
+    const pdfBuffer = await page.pdf({
+      format: 'A4',
+      landscape: true,
+      printBackground: true,
+      margin: { top: "20px", bottom: "20px", left: "20px", right: "20px" },
+    });
+
+    await browser.close();
+
+    // 7. Send PDF to frontend
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename=umeedwar-report-${month}-${year}.pdf`
+    );
+    
+    // Send as binary buffer
+    res.end(pdfBuffer, 'binary');
+  } catch (error) {
+    console.error("PDF generation error:", error);
+    res.status(500).json({ message: "Failed to generate PDF" });
   }
 });
 
