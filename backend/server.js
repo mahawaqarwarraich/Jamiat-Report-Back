@@ -10,8 +10,11 @@ const path = require('path');
 
 
 
+
 // Load environment variables
 dotenv.config();
+
+
 
 const app = express();
 
@@ -34,15 +37,16 @@ app.use(cors({
   credentials: true,
 }));
 
+// 'mongodb://127.0.0.1:27017/jamiat-reports' :local
+
 // MongoDB Connection
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/jamiat-reports';
+const MONGODB_URI = process.env.MONGODB_URI;
 mongoose.connect(MONGODB_URI)
   .then(() => console.log('Connected to MongoDB'))
   .catch(err => console.error('MongoDB connection error:', err));
 
 // Import routes
-const userRoutes = require('./routes/users');
-const reportRoutes = require('./routes/reports');
+const userRoutes = require('./routes/users')
 const hamiReportRoutes = require('./routes/hamiReports');
 const rafeeqaReportRoutes = require('./routes/rafeeqaReports');
 const ruknReportRoutes = require('./routes/ruknReports');
@@ -50,7 +54,6 @@ const umeedwarReportRoutes = require('./routes/umeedwarReports');
 
 // Routes
 app.use('/api/users', userRoutes);
-app.use('/api/reports', reportRoutes);
 app.use('/api/hami-reports', hamiReportRoutes);
 app.use('/api/rafeeqa-reports', rafeeqaReportRoutes);
 app.use('/api/rukn-reports', ruknReportRoutes);
@@ -69,5 +72,6 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
+  
   console.log(`Server running on port ${PORT}`);
 });
