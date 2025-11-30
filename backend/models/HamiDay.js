@@ -77,6 +77,10 @@ const hamiDaySchema = new mongoose.Schema({
       type: Number,
       default: 0,
       min: 0
+    },
+    isMark: {
+      type: Boolean,
+      default: false
     }
 });
 

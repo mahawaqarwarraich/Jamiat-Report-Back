@@ -1,5 +1,8 @@
 const express = require('express');
 const mongoose = require('mongoose');
+const path = require('path');
+const ejs = require('ejs');
+const puppeteer = require('puppeteer');
 const auth = require('../middleware/auth');
 const HamiReport = require('../models/HamiReport');
 const HamiDay = require('../models/HamiDay');
@@ -181,6 +184,7 @@ router.post('/:month/:year/:date', auth, async (req, res) => {
         dayToUpdate.set('apnaMuhasibaKiya', dayData.ajApnaMuhasibaKiya || dayData.apnaMuhasibaKiya || 'no');
         dayToUpdate.set('karkunaanMulakaat', dayData.karkunaanMulakaat || 0);
         dayToUpdate.set('taqseemDawatiMasnuaat', dayData.taqseemDawatiMasnuaat || 0);
+        dayToUpdate.set('isMark', true);
         await dayToUpdate.save();
       }
 
@@ -206,6 +210,7 @@ router.post('/:month/:year/:date', auth, async (req, res) => {
         dayToUpdate.set('apnaMuhasibaKiya', dayData.ajApnaMuhasibaKiya || dayData.apnaMuhasibaKiya || 'no');
         dayToUpdate.set('karkunaanMulakaat', dayData.karkunaanMulakaat || 0);
         dayToUpdate.set('taqseemDawatiMasnuaat', dayData.taqseemDawatiMasnuaat || 0);
+        dayToUpdate.set('isMark', true);
         await dayToUpdate.save();
       }
 
@@ -244,6 +249,76 @@ router.get('/:month/:year/days', auth, async (req, res) => {
   } catch (error) {
     console.error('Error fetching Hami days:', error);
     res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Generate PDF from template URL using Puppeteer
+// This route must come before /:month/:year to avoid route conflicts
+
+router.get("/:month/:year/pdf", auth, async (req, res) => {
+  try {
+    const { month, year } = req.params;
+
+    // 1. Fetch report data from DB
+    const report = await HamiReport.findOne({
+      user: req.user._id,
+      month,
+      year
+    });
+
+    // 2. Fetch user data from DB
+    const user = await User.findById(req.user._id);
+
+    // 3. Render EJS template to HTML string
+    const templatePath = path.join(__dirname, "../templates/hami-report.ejs");
+    const html = await ejs.renderFile(templatePath, { 
+      month, 
+      year, 
+      reportData: report,
+      userData: user
+    });
+    console.log("html", html);
+
+    // 3. Launch Puppeteer
+      // const browser = await puppeteer.launch({
+      //   headless: true,
+      //   executablePath: 'C:\\Users\PMLS\\.cache\\puppeteer\\chrome\\win64-142.0.7444.175\chrome-win64\chrome.exe',
+      //   args: ["--no-sandbox", "--disable-setuid-sandbox"],
+      // });
+      const browser = await puppeteer.launch();
+    const page = await browser.newPage();
+
+    // 4. Set the HTML content
+    await page.setContent(html);
+    await page.emulateMediaType('screen');
+
+
+    // 5. Generate PDF
+    const pdfBuffer = await page.pdf({
+      format: "A4",
+      printBackground: true,
+      landscape: true,
+      margin: { top: "20px", bottom: "20px", left: "20px", right: "20px" },
+    });
+
+    await page.pdf({ path: 'test.pdf', format: 'A4', printBackground: true });
+
+    console.log('PDF bytes:', pdfBuffer.length);
+    await browser.close();
+    
+
+    
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename=hami-report-${month}-${year}.pdf`
+    );
+    
+    // Send as binary buffer
+    res.end(pdfBuffer, 'binary');
+  } catch (error) {
+    console.error("PDF generation error:", error);
+    res.status(500).json({ message: "Failed to generate PDF" });
   }
 });
 

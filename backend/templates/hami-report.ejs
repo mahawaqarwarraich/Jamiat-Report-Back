@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hami Report</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @media print {
+      body {
+        margin: 0;
+        padding: 0;
+      }
+      nav {
+        display: none !important;
+      }
+      .container {
+        padding: 0 !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <%
+    // Helper functions
+    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
+                       'July', 'August', 'September', 'October', 'November', 'December'];
+    
+    const getDaysInMonth = (month, year) => {
+      const monthIndex = monthNames.indexOf(month);
+      return new Date(parseInt(year), monthIndex + 1, 0).getDate();
+    };
+
+    const fieldLabels = {
+      namaz: 'Namaz',
+      hifz: 'Hifz',
+      nazra: 'Nazra',
+      tafseer: 'Tafseer',
+      hadees: 'Hadees',
+      literature: 'Literature',
+      ghrKaKaam: 'Ghar Ka Kaam',
+      achiBaatBtai: 'Achi Baat Btai',
+      quranCircle: 'Quran Circle',
+      apnaMuhasibaKiya: 'Apna Muhasiba Kiya',
+      karkunaanMulakaat: 'Karkunaan Mulakaat',
+      taqseemDawatiMasnuaat: 'Taqseem Dawati Masnuaat'
+    };
+
+    const hamiFields = [
+      'namaz', 'hifz', 'nazra', 'tafseer', 'hadees', 'literature', 
+      'ghrKaKaam', 'achiBaatBtai', 'quranCircle', 'apnaMuhasibaKiya',
+      'karkunaanMulakaat', 'taqseemDawatiMasnuaat'
+    ];
+
+    const getDayData = (dayNumber, reportData) => {
+      if (!reportData || !reportData.days) return null;
+      return reportData.days.find(d => d.date === dayNumber);
+    };
+
+    const getFieldValue = (dayNumber, fieldName, reportData) => {
+      const day = getDayData(dayNumber, reportData);
+      if (!day) return null;
+      return day[fieldName];
+    };
+
+    const renderCell = (dayNumber, fieldName, reportData) => {
+      const day = getDayData(dayNumber, reportData);
+      
+      // Check if isMark is false - if so, return empty cell
+      if (!day || day.isMark === false) {
+        return '';
+      }
+      
+      const value = getFieldValue(dayNumber, fieldName, reportData);
+      if (value === null || value === undefined) return '';
+      
+      // For numeric fields
+      if (fieldName === 'karkunaanMulakaat' || fieldName === 'taqseemDawatiMasnuaat') {
+        return value || '0';
+      }
+      
+      // For yes/no fields
+      if (value === 'yes') {
+        return '✓';
+      } else if (value === 'no') {
+        return '✗';
+      }
+      
+      return '';
+    };
+
+    const daysInMonth = getDaysInMonth(month, year);
+    const daysArray = Array.from({ length: daysInMonth }, (_, i) => i + 1);
+  %>
+
+  <div class="min-h-screen bg-white print:bg-white" style="margin: 0; padding: 40px 20px;">
+    <!-- Header with three words -->
+    <div class="flex justify-between items-center mb-8 border-b-2 border-gray-800 pb-4">
+      <div class="text-lg font-semibold text-gray-800" style="direction: rtl;">نحن أنصار الله</div>
+      <div class="text-2xl font-bold text-gray-900" style="direction: rtl;">بسم الله الرحمن الرحيم</div>
+      <div class="text-lg font-semibold text-gray-800" style="direction: rtl;">كونوا أنصار الله</div>
+    </div>
+
+    <!-- Organization Name and Logo -->
+    <div class="text-center mb-10">
+      <div class="flex justify-center items-center mb-4">
+        <img 
+          src="http://localhost:3000/logo.png" 
+          alt="Islami Jamiat Talibat Pakistan Logo" 
+          class="h-20 w-auto object-contain"
+          onerror="this.style.display='none'"
+        />
+      </div>
+      <h1 class="text-4xl font-bold text-gray-900 mb-3">
+        Islami Jamiat Talibat Pakistan
+      </h1>
+      <div class="text-lg text-gray-700 font-medium">Monthly Report</div>
+    </div>
+
+    <!-- User Information -->
+    <div class="mb-10 border-2 border-gray-400 p-6 rounded-lg bg-gray-50">
+      <div class="grid grid-cols-2 gap-6">
+        <div class="border-b border-gray-300 pb-2">
+          <span class="font-bold text-gray-800 text-lg">Name: </span>
+          <span class="text-gray-900 text-lg"><%= userData?.name || 'N/A' %></span>
+        </div>
+        <div class="border-b border-gray-300 pb-2">
+          <span class="font-bold text-gray-800 text-lg">Role: </span>
+          <span class="text-gray-900 text-lg capitalize"><%= userData?.category || 'N/A' %></span>
+        </div>
+        <div class="border-b border-gray-300 pb-2">
+          <span class="font-bold text-gray-800 text-lg">Institution: </span>
+          <span class="text-gray-900 text-lg"><%= userData?.educationalInstitution || 'N/A' %></span>
+        </div>
+        <div class="border-b border-gray-300 pb-2">
+          <span class="font-bold text-gray-800 text-lg">Month of Report: </span>
+          <span class="text-gray-900 text-lg"><%= month %> <%= year %></span>
+        </div>
+        <div class="border-b border-gray-300 pb-2">
+          <span class="font-bold text-gray-800 text-lg">Address: </span>
+          <span class="text-gray-900 text-lg"><%= userData?.address || 'N/A' %></span>
+        </div>
+        <div class="border-b border-gray-300 pb-2">
+          <span class="font-bold text-gray-800 text-lg">Phone Number: </span>
+          <span class="text-gray-900 text-lg"><%= userData?.phoneNumber || 'N/A' %></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Table -->
+    <div class="mb-10 overflow-x-auto">
+      <table class="min-w-full border-2 border-gray-800" style="border-collapse: collapse; font-size: 14px;">
+        <thead>
+          <tr class="bg-gray-300">
+            <th class="border-2 border-gray-800 px-4 py-3 text-left font-bold text-gray-900 bg-gray-400" style="min-width: 150px;">
+              Date
+            </th>
+            <% daysArray.forEach((day) => { %>
+              <th
+                class="border-2 border-gray-800 px-2 py-2 text-center font-bold text-gray-900 bg-gray-400"
+                style="min-width: 45px; width: 45px;"
+              >
+                <%= day %>
+              </th>
+            <% }); %>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Field rows -->
+          <% hamiFields.forEach((field, index) => { %>
+            <tr class="<%= index % 2 === 0 ? 'bg-white' : 'bg-gray-50' %>">
+              <td class="border-2 border-gray-800 px-4 py-2 font-semibold text-gray-900 bg-gray-200 text-left" style="white-space: nowrap;">
+                <%= fieldLabels[field] %>
+              </td>
+              <% daysArray.forEach((day) => { %>
+                <td
+                  class="border-2 border-gray-800 px-2 py-2 text-center"
+                >
+                  <%= renderCell(day, field, reportData) %>
+                </td>
+              <% }); %>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Q/A Section -->
+    <% if (reportData && reportData.qa) { %>
+      <div class="mt-12 border-2 border-gray-800 p-8 rounded-lg bg-gray-50">
+        <h2 class="text-3xl font-bold text-gray-900 mb-8 text-center border-b-2 border-gray-800 pb-4">
+          Questions & Answers
+        </h2>
+        <div class="space-y-8">
+          <% 
+            const qaEntries = Object.entries(reportData.qa);
+            qaEntries.forEach(([question, answer], index) => {
+          %>
+            <div class="border-b-2 border-gray-400 pb-6 <%= index === qaEntries.length - 1 ? '' : '' %>">
+              <div class="font-bold text-lg text-gray-900 mb-3">
+                Q<%= index + 1 %>: <%= question %>
+              </div>
+              <div class="text-gray-800 pl-6 text-base leading-relaxed" style="min-height: 40px;">
+                <% if (answer) { %>
+                  <div class="whitespace-pre-wrap"><%= answer %></div>
+                <% } else { %>
+                  <span class="text-gray-400 italic">No answer provided</span>
+                <% } %>
+              </div>
+            </div>
+          <% }); %>
+        </div>
+      </div>
+    <% } %>
+  </div>
+</body>
+</html>
+
