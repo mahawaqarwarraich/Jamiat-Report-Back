@@ -185,6 +185,7 @@ router.post('/:month/:year/:date', auth, async (req, res) => {
           const fieldValue = dayData[fieldName] || 'no';
           dayToUpdate.set(fieldName, fieldValue);
         });
+        dayToUpdate.set('isMark', true);
         await dayToUpdate.save();
 
       }
@@ -214,7 +215,7 @@ router.post('/:month/:year/:date', auth, async (req, res) => {
           const fieldValue = dayData[fieldName] || 'no';
           dayToUpdate.set(fieldName, fieldValue);
         });
-
+        dayToUpdate.set('isMark', true);
         await dayToUpdate.save();
       }
 

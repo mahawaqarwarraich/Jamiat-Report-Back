@@ -70,6 +70,10 @@ const rafeeqaDaySchema = new mongoose.Schema({
       type: String,
       enum: ['yes', 'no'],
       default: 'no'
+    },
+    isMark: {
+      type: Boolean,
+      default: false
     }
   });
 

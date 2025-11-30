@@ -181,9 +181,10 @@ const umeedwarDaySchema = new mongoose.Schema({
       enum: ['yes', 'no'],
       default: 'no'
     },
-
-    
-   
+    isMark: {
+      type: Boolean,
+      default: false
+    }
   });
 
 module.exports = umeedwarDaySchema;
