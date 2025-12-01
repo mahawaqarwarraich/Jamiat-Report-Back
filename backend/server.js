@@ -1,6 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
-const cors = require('cors');
+// const cors = require('./middleware/cors');
+const { corsMiddleware, handlePreflight } = require('./middleware/cors');
 const dotenv = require('dotenv');
 const path = require('path');
 
@@ -9,51 +10,72 @@ dotenv.config();
 
 const app = express();
 
-// Add request logging middleware FIRST
+
+
+
+
+// Apply CORS middleware
+app.use(corsMiddleware);
+app.use(handlePreflight);
+
+// Handle preflight requests explicitly
+app.options('*', (req, res) => {
+  res.status(200).end();
+});
+
+// Debug middleware for CORS issues
 app.use((req, res, next) => {
-  console.log(`${req.method} ${req.path}`);
-  console.log('Origin:', req.headers.origin);
-  console.log('Headers:', req.headers);
+  console.log(`${req.method} ${req.path} - Origin: ${req.headers.origin}`);
   next();
 });
 
-// Middleware - IMPORTANT: Place CORS before other middleware
-const corsOptions = {
-  origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps, Postman, etc.)
-    if (!origin) return callback(null, true);
-    
-    const allowedOrigins = [
-      'http://localhost:3000',
-      'http://localhost:5173',
-      'capacitor://localhost',
-      'ionic://localhost',
-      'http://localhost',
-      'file://',
-    ];
-    
-    // Check if origin starts with capacitor:// or ionic:// or file://
-    if (origin.startsWith('capacitor://') || 
-        origin.startsWith('ionic://') || 
-        origin.startsWith('file://') ||
-        allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(null, true); // For development, allow all origins
-      // For production, use: callback(new Error('Not allowed by CORS'));
-    }
-  },
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  credentials: true,
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
-  exposedHeaders: ['Content-Range', 'X-Content-Range'],
-  maxAge: 86400, // 24 hours
-};
+//end
 
-app.use(cors(corsOptions));
+// // Add request logging middleware FIRST
+// app.use((req, res, next) => {
+//   console.log(`${req.method} ${req.path}`);
+//   console.log('Origin:', req.headers.origin);
+//   console.log('Headers:', req.headers);
+//   next();
+// });
 
-// Handle preflight requests
-app.options('*', cors(corsOptions));
+// // Middleware - IMPORTANT: Place CORS before other middleware
+// const corsOptions = {
+//   origin: function (origin, callback) {
+//     // Allow requests with no origin (like mobile apps, Postman, etc.)
+//     if (!origin) return callback(null, true);
+    
+//     const allowedOrigins = [
+//       'http://localhost:3000',
+//       'http://localhost:5173',
+//       'capacitor://localhost',
+//       'ionic://localhost',
+//       'http://localhost',
+//       'file://',
+//     ];
+    
+//     // Check if origin starts with capacitor:// or ionic:// or file://
+//     if (origin.startsWith('capacitor://') || 
+//         origin.startsWith('ionic://') || 
+//         origin.startsWith('file://') ||
+//         allowedOrigins.includes(origin)) {
+//       callback(null, true);
+//     } else {
+//       callback(null, true); // For development, allow all origins
+//       // For production, use: callback(new Error('Not allowed by CORS'));
+//     }
+//   },
+//   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+//   credentials: true,
+//   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+//   exposedHeaders: ['Content-Range', 'X-Content-Range'],
+//   maxAge: 86400, // 24 hours
+// };
+
+// app.use(cors(corsOptions));
+
+// // Handle preflight requests
+// app.options('*', cors(corsOptions));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
