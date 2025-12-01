@@ -4,41 +4,51 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 const path = require('path');
 
-
-
-
-
-
-
-
 // Load environment variables
 dotenv.config();
 
-
-
 const app = express();
 
-// For production
-// app.use(express.static(path.join(__dirname, '../frontend/build')));
+// Middleware - IMPORTANT: Place CORS before other middleware
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps, Postman, etc.)
+    if (!origin) return callback(null, true);
+    
+    const allowedOrigins = [
+      'http://localhost:3000',
+      'http://localhost:5173',
+      'capacitor://localhost',
+      'ionic://localhost',
+      'http://localhost',
+      'file://',
+    ];
+    
+    // Check if origin starts with capacitor:// or ionic:// or file://
+    if (origin.startsWith('capacitor://') || 
+        origin.startsWith('ionic://') || 
+        origin.startsWith('file://') ||
+        allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(null, true); // For development, allow all origins
+      // For production, use: callback(new Error('Not allowed by CORS'));
+    }
+  },
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  credentials: true,
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  exposedHeaders: ['Content-Range', 'X-Content-Range'],
+  maxAge: 86400, // 24 hours
+};
 
-// app.get('*', (req, res) => {
-//   res.sendFile(path.join(__dirname, '../frontend/build/index.html'));
-// });
+app.use(cors(corsOptions));
 
-// Middleware
-app.use(cors());
+// Handle preflight requests
+app.options('*', cors(corsOptions));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-// To avoid cors error
-app.use(cors({
-  origin: ['capacitor://localhost', 'file://'],
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  credentials: true,
-}));
-
-
-// 'mongodb://127.0.0.1:27017/jamiat-reports' :local
 
 // MongoDB Connection
 const MONGODB_URI = process.env.MONGODB_URI;
@@ -73,6 +83,5 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  
   console.log(`Server running on port ${PORT}`);
 });
