@@ -26,16 +26,16 @@ const app = express();
 // });
 
 // Middleware
-app.use(cors());
+// app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // To avoid cors error
-app.use(cors({
-  origin: 'capacitor://localhost',
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  credentials: true,
-}));
+// app.use(cors({
+//   origin: 'capacitor://localhost',
+//   methods: ['GET', 'POST', 'PUT', 'DELETE'],
+//   credentials: true,
+// }));
 
 
 // 'mongodb://127.0.0.1:27017/jamiat-reports' :local
