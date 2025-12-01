@@ -9,6 +9,14 @@ dotenv.config();
 
 const app = express();
 
+// Add request logging middleware FIRST
+app.use((req, res, next) => {
+  console.log(`${req.method} ${req.path}`);
+  console.log('Origin:', req.headers.origin);
+  console.log('Headers:', req.headers);
+  next();
+});
+
 // Middleware - IMPORTANT: Place CORS before other middleware
 const corsOptions = {
   origin: function (origin, callback) {
