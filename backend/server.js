@@ -1,7 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 // const cors = require('./middleware/cors');
-const { corsMiddleware, handlePreflight } = require('./middleware/cors');
+// const { corsMiddleware, handlePreflight } = require('./middleware/cors');
 const dotenv = require('dotenv');
 const path = require('path');
 
@@ -10,24 +10,41 @@ dotenv.config();
 
 const app = express();
 
-
-
-
-
-// Apply CORS middleware
-app.use(corsMiddleware);
-app.use(handlePreflight);
-
-// Handle preflight requests explicitly
-app.options('*', (req, res) => {
-  res.status(200).end();
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', 'https://localhost'); // or '*' for testing
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200);
+  }
+  next();
 });
 
-// Debug middleware for CORS issues
+// Debug logs
 app.use((req, res, next) => {
   console.log(`${req.method} ${req.path} - Origin: ${req.headers.origin}`);
   next();
 });
+
+
+
+
+// // Apply CORS middleware
+// app.use(corsMiddleware);
+// app.use(handlePreflight);
+
+// // Handle preflight requests explicitly
+// app.options('*', (req, res) => {
+//   res.status(200).end();
+// });
+
+// // Debug middleware for CORS issues
+// app.use((req, res, next) => {
+//   console.log(`${req.method} ${req.path} - Origin: ${req.headers.origin}`);
+//   next();
+// });
 
 //end
 
