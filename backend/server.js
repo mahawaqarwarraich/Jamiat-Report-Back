@@ -32,10 +32,11 @@ app.use(express.urlencoded({ extended: true }));
 
 // To avoid cors error
 app.use(cors({
-  origin: process.env.FRONTEND_URL,
+  origin: 'capacitor://localhost',
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   credentials: true,
 }));
+
 
 // 'mongodb://127.0.0.1:27017/jamiat-reports' :local
 
