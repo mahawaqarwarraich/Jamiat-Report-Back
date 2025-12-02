@@ -2,13 +2,13 @@ const express = require('express');
 const mongoose = require('mongoose');
 const path = require('path');
 const ejs = require('ejs');
-// const puppeteer = require('puppeteer');
+const puppeteer = require('puppeteer');
 const auth = require('../middleware/auth');
 const HamiReport = require('../models/HamiReport');
 const HamiDay = require('../models/HamiDay');
 const User = require('../models/User');
-const puppeteer = require('puppeteer-core');
-const chromium = require('@sparticuz/chromium');
+// const puppeteer = require('puppeteer-core');
+// const chromium = require('@sparticuz/chromium');
 
 const router = express.Router();
 
@@ -280,13 +280,13 @@ router.get("/:month/:year/pdf", auth, async (req, res) => {
       userData: user
     });
    
-    // Use chromium for Vercel deployment
-    const browser = await puppeteer.launch({
-      args: chromium.args,
-      defaultViewport: chromium.defaultViewport,
-      executablePath: await chromium.executablePath(),
-      headless: chromium.headless,
-    });
+    // // Use chromium for Vercel deployment
+    // const browser = await puppeteer.launch({
+    //   args: chromium.args,
+    //   defaultViewport: chromium.defaultViewport,
+    //   executablePath: await chromium.executablePath(),
+    //   headless: chromium.headless,
+    // });
 
     // 3. Launch Puppeteer
       // const browser = await puppeteer.launch({
@@ -294,7 +294,7 @@ router.get("/:month/:year/pdf", auth, async (req, res) => {
       //   executablePath: 'C:\\Users\PMLS\\.cache\\puppeteer\\chrome\\win64-142.0.7444.175\chrome-win64\chrome.exe',
       //   args: ["--no-sandbox", "--disable-setuid-sandbox"],
       // });
-      //const browser = await puppeteer.launch();
+    const browser = await puppeteer.launch();
     const page = await browser.newPage();
 
     // 4. Set the HTML content
