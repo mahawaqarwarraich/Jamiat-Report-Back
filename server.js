@@ -109,6 +109,9 @@ app.use((req, res, next) => {
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Serve static files from public directory
+app.use(express.static(path.join(__dirname, 'public')));
+
 // MongoDB Connection
 const MONGODB_URI = process.env.MONGODB_URI;
 mongoose.connect(MONGODB_URI)

@@ -106,12 +106,13 @@
     <!-- Organization Name and Logo -->
     <div class="text-center mb-10">
       <div class="flex justify-center items-center mb-4">
-        <img 
-          src="http://localhost:3000/logo.png" 
-          alt="Islami Jamiat Talibat Pakistan Logo" 
-          class="h-20 w-auto object-contain"
-          onerror="this.style.display='none'"
-        />
+        <% if (typeof logoDataUri !== 'undefined' && logoDataUri) { %>
+          <img 
+            src="<%= logoDataUri %>" 
+            alt="Islami Jamiat Talibat Pakistan Logo" 
+            class="h-20 w-auto object-contain"
+          />
+        <% } %>
       </div>
       <h1 class="text-4xl font-bold text-gray-900 mb-3">
         Islami Jamiat Talibat Pakistan

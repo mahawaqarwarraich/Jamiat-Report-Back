@@ -1,6 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const path = require('path');
+const fs = require('fs');
 const ejs = require('ejs');
 // const puppeteer = require('puppeteer'); // can be used during dev but not prod
 const auth = require('../middleware/auth');
@@ -271,13 +272,27 @@ router.get("/:month/:year/pdf", auth, async (req, res) => {
     // 2. Fetch user data from DB
     const user = await User.findById(req.user._id);
 
-    // 3. Render EJS template to HTML string
+    // 3. Read logo file and convert to base64 data URI
+    let logoDataUri = '';
+    try {
+      const logoPath = path.join(__dirname, "../public/logo.png");
+      if (fs.existsSync(logoPath)) {
+        const logoBuffer = fs.readFileSync(logoPath);
+        const logoBase64 = logoBuffer.toString('base64');
+        logoDataUri = `data:image/png;base64,${logoBase64}`;
+      }
+    } catch (error) {
+      console.error('Error reading logo file:', error);
+    }
+
+    // 4. Render EJS template to HTML string
     const templatePath = path.join(__dirname, "../templates/hami-report.ejs");
     const html = await ejs.renderFile(templatePath, { 
       month, 
       year, 
       reportData: report,
-      userData: user
+      userData: user,
+      logoDataUri: logoDataUri
     });
    
     // Use chromium for deployment
