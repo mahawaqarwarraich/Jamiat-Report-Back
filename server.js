@@ -11,20 +11,20 @@ dotenv.config();
 const app = express();
 
 app.use((req, res, next) => {
-  // const allowedOrigins = [
-  //   'https://localhost', // android
-  //   'http://localhost:3000', // local website
-  //   'capacitor://localhost', // iphone
-  //   'ionic://localhost'
-  // ];
+  const allowedOrigins = [
+    'https://localhost', // android
+    'http://localhost:3000', // local website
+    'capacitor://localhost', // iphone
+    'ionic://localhost'
+  ];
   
-  // const origin = req.headers.origin;
-  // if (allowedOrigins.includes(origin)) {
-  //   res.header('Access-Control-Allow-Origin', origin);
-  // }
+  const origin = req.headers.origin;
+  if (allowedOrigins.includes(origin)) {
+    res.header('Access-Control-Allow-Origin', origin);
+  }
   
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.header('Access-Control-Allow-Origin', 'http://localhost:3000');
+ // res.header('Access-Control-Allow-Origin', 'http://localhost:3000');
   res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   res.header('Access-Control-Allow-Credentials', 'true');
   
