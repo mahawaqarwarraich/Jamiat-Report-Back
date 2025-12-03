@@ -1,12 +1,15 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const path = require('path');
+const fs = require('fs');
 const ejs = require('ejs');
-const puppeteer = require('puppeteer');
+// const puppeteer = require('puppeteer'); // can be used during dev but not prod
 const auth = require('../middleware/auth');
 const RafeeqaReport = require('../models/RafeeqaReport');
 const RafeeqaDay = require('../models/RafeeqaDay');
 const User = require('../models/User');
+const puppeteer = require('puppeteer-core');
+const chromium = require('@sparticuz/chromium');
 
 const router = express.Router();
 
@@ -264,37 +267,72 @@ router.get("/:month/:year/pdf", auth, async (req, res) => {
     // 2. Fetch user data from DB
     const user = await User.findById(req.user._id);
 
-    // 3. Render EJS template to HTML string
+    // 3. Read logo file and convert to base64 data URI
+    let logoDataUri = '';
+    try {
+      const logoPath = path.join(__dirname, "../public/logo.png");
+      if (fs.existsSync(logoPath)) {
+        const logoBuffer = fs.readFileSync(logoPath);
+        const logoBase64 = logoBuffer.toString('base64');
+        logoDataUri = `data:image/png;base64,${logoBase64}`;
+      }
+    } catch (error) {
+      console.error('Error reading logo file:', error);
+    }
+
+    // 4. Render EJS template to HTML string
     const templatePath = path.join(__dirname, "../templates/rafeeqa-report.ejs");
     const html = await ejs.renderFile(templatePath, { 
       month, 
       year, 
       reportData: report,
-      userData: user
+      userData: user,
+      logoDataUri: logoDataUri
+    });
+   
+    // Use chromium for deployment
+    const browser = await puppeteer.launch({
+      args: chromium.args,
+      defaultViewport: chromium.defaultViewport,
+      executablePath: await chromium.executablePath(),
+      headless: chromium.headless,
     });
 
-    // 4. Launch Puppeteer
-    const browser = await puppeteer.launch({
-      headless: true,
-      args: ["--no-sandbox", "--disable-setuid-sandbox"],
-    });
+    // 3. Launch Puppeteer
+      // const browser = await puppeteer.launch({
+      //   headless: true,
+      //   executablePath: 'C:\\Users\PMLS\\.cache\\puppeteer\\chrome\\win64-142.0.7444.175\chrome-win64\chrome.exe',
+      //   args: ["--no-sandbox", "--disable-setuid-sandbox"],
+      // });
+    //const browser = await puppeteer.launch();
     const page = await browser.newPage();
 
-    // 5. Set the HTML content
+    // 4. Set the HTML content
+    //await page.setContent(html, { waitUntil: 'networkidle0' });
     await page.setContent(html);
     await page.emulateMediaType('screen');
 
-    // 6. Generate PDF
+
+    // 5. Generate PDF
     const pdfBuffer = await page.pdf({
-      format: 'A4',
-      landscape: true,
+    
+    format: 'A4',
+    landscape: true,
       printBackground: true,
+      // width: '500mm',           // very wide page
+       
+    
       margin: { top: "20px", bottom: "20px", left: "20px", right: "20px" },
     });
 
     await browser.close();
 
-    // 7. Send PDF to frontend
+    // await page.pdf({ path: 'test.pdf', format: 'A4', printBackground: true });
+
+    
+
+    
+    res.setHeader("Content-Type", "application/pdf");
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader(
       "Content-Disposition",
