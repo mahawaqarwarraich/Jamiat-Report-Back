@@ -3,13 +3,13 @@ const mongoose = require('mongoose');
 const path = require('path');
 const fs = require('fs');
 const ejs = require('ejs');
-// const puppeteer = require('puppeteer'); // can be used during dev but not prod
+//const puppeteer = require('puppeteer'); // can be used during dev but not prod
 const auth = require('../middleware/auth');
 const HamiReport = require('../models/HamiReport');
 const HamiDay = require('../models/HamiDay');
 const User = require('../models/User');
-const puppeteer = require('puppeteer-core');
-const chromium = require('@sparticuz/chromium');
+const puppeteer = require('puppeteer-core'); // during prod
+const chromium = require('@sparticuz/chromium'); // during prod
 
 const router = express.Router();
 
@@ -295,21 +295,23 @@ router.get("/:month/:year/pdf", auth, async (req, res) => {
       logoDataUri: logoDataUri
     });
    
-    // Use chromium for deployment
-    const browser = await puppeteer.launch({
-      args: chromium.args,
-      defaultViewport: chromium.defaultViewport,
-      executablePath: await chromium.executablePath(),
-      headless: chromium.headless,
-    });
+    if (process.env.NODE_ENV === 'production') {
+      const browser = await puppeteer.launch({
+        args: chromium.args,
+        defaultViewport: chromium.defaultViewport,
+        executablePath: await chromium.executablePath(),
+        headless: chromium.headless,
+      });
+    } else {
+      const browser = await puppeteer.launch({
+        headless: true,
+        //executablePath: 'C:\\Users\PMLS\\.cache\\puppeteer\\chrome\\win64-142.0.7444.175\chrome-win64\chrome.exe',
+        args: ["--no-sandbox", "--disable-setuid-sandbox"],
+      });
+    }
+   
 
-    // 3. Launch Puppeteer
-      // const browser = await puppeteer.launch({
-      //   headless: true,
-      //   executablePath: 'C:\\Users\PMLS\\.cache\\puppeteer\\chrome\\win64-142.0.7444.175\chrome-win64\chrome.exe',
-      //   args: ["--no-sandbox", "--disable-setuid-sandbox"],
-      // });
-    //const browser = await puppeteer.launch();
+   
     const page = await browser.newPage();
 
     // 4. Set the HTML content
