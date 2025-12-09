@@ -13,7 +13,8 @@ const app = express();
 app.use((req, res, next) => {
   const allowedOrigins = [
     'https://localhost', // android
-    'http://localhost:3000', // local website
+    'http://localhost:3000', // local website,
+    'https://jamiat-front.vercel.app', // production website
     'capacitor://localhost', // iphone
     'ionic://localhost'
   ];
