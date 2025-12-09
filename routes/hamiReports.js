@@ -295,15 +295,16 @@ router.get("/:month/:year/pdf", auth, async (req, res) => {
       logoDataUri: logoDataUri
     });
    
+    let browser;
     if (process.env.NODE_ENV === 'production') {
-      const browser = await puppeteer.launch({
+      browser = await puppeteer.launch({
         args: chromium.args,
         defaultViewport: chromium.defaultViewport,
         executablePath: await chromium.executablePath(),
         headless: chromium.headless,
       });
     } else {
-      const browser = await puppeteer.launch({
+      browser = await puppeteer.launch({
         headless: true,
         //executablePath: 'C:\\Users\PMLS\\.cache\\puppeteer\\chrome\\win64-142.0.7444.175\chrome-win64\chrome.exe',
         args: ["--no-sandbox", "--disable-setuid-sandbox"],
